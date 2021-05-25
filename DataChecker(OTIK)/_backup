@@ -1,0 +1,152 @@
+using System;
+using System.IO;
+using System.Text;
+
+namespace DataChecker_OTIK_
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string msg = "";
+            Console.OutputEncoding = Encoding.UTF8;
+            Configuration conf = new Configuration();
+            conf.Load();
+            string path = conf.TextName;
+            char num = '1';
+            if (conf.TextFill == "1") num = '0';
+            StreamReader sr = new StreamReader(path, Encoding.Unicode);
+            string reader = sr.ReadToEnd();
+            char[] binary = StringToBinary(reader).ToCharArray();
+            int ErrorCount = 0;
+
+            for (int i = 0; i < binary.Length; i++) {
+                if (binary[i] == num) ErrorCount++;
+            }
+
+            int ByteCount = Convert.ToInt32(reader.Length) * 2;
+            int BitCount = ByteCount * 8;
+            double Pa = Math.Round((float)ErrorCount / (float)BitCount, 7);
+
+            float pof_Error = conf.PO_Error;
+            float[] p = new float[3]; // p[0] - ФМ-4 | p[1] - ВФМ-4 | p[2] - KAM-16
+
+
+            float[] KrumpRes = new float[3];
+            for (int i = 0; i < KrumpRes.Length; i++)
+            {
+                double krump = Math.Sqrt(conf.SignalNoise * 2);
+                if (i == 2) krump = Math.Sqrt(conf.SignalNoise * 0.9f);
+                KrumpRes[i] = (float)KrumpTable.Krump(krump);
+                p[i] = 0.5f * (1f - KrumpRes[i]);
+                if (i == 1) p[i] = 0.5f * (1f - KrumpRes[i] * KrumpRes[i]);
+                if (i == 2) p[i] = 0.25f * (1f - KrumpRes[i] * KrumpRes[i]);
+            }
+            /*
+            //FM4
+            double krump_FM4 = Math.Sqrt(conf.SignalNoise * 2);
+            float KrumpRes_FM4 = (float)KrumpTable.Krump(krump_FM4);
+            p[0] = 0.5f * (1f - KrumpRes_FM4);
+            //VMF4
+            double krump_VFM4 = Math.Sqrt(conf.SignalNoise * 2);
+            float KrumpRes_VFM4 = (float)KrumpTable.Krump(krump_VFM4);
+            p[1] = 0.5f * (1f - (KrumpRes_VFM4 * KrumpRes_VFM4));
+
+            //KAM16
+            double krump_KAM16 = (Math.Sqrt(conf.SignalNoise)) * 0.9f;
+            float KrumpRes_KAM16 = (float)KrumpTable.Krump(krump_KAM16);
+            p[2] = 0.25f * (1f - (KrumpRes_KAM16 * KrumpRes_KAM16));
+
+            */
+
+            //Closer check
+            float[] tmp = new float[3];
+            for (int i = 0; i < p.Length; i++)
+            {
+                tmp[i] = Math.Abs((p[i] - pof_Error));
+            }
+            float closer = tmp[0];
+            int closerPos = 0;
+            for (int i = 0; i < p.Length; i++)
+            {
+                if (tmp[i] < closer)
+                {
+                    closer = p[i];
+                    closerPos = i;
+                }
+            }
+
+
+            string[] pos = new string[3];
+            for (int i = 0; i < p.Length; i++)
+            {
+                pos[i] = $"{Math.Round(p[i], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[i]), 6)} - не підходить";
+                if (closerPos == i) pos[i] = $"{Math.Round(p[i], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[i]), 6)} - підходить";
+            }
+
+            /*string p1 = $"{Math.Round(p[0], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[0]), 6)} - не підходить";
+            string p2 = $"{Math.Round(p[1], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[1]), 6)} - не підходить";
+            string p3 = $"{Math.Round(p[2], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[2]), 6)} - не підходить";
+            if (closerPos == 0) p1 = $"{Math.Round(p[0], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[0]), 6)} - підходить";
+            if (closerPos == 1) p2 = $"{Math.Round(p[1], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[1]), 6)} - підходить";
+            if (closerPos == 2) p3 = $"{Math.Round(p[2], 6)} більше, ніж {pof_Error} на {Math.Round(Math.Abs(pof_Error - p[2]), 6)} - підходить";*/
+
+            //OUT
+            /*msg += $"Загальна кількість байт: {ByteCount}\n";
+            msg += $"Загальна кількість біт: {BitCount}\n";
+            msg += $"Кількість пошкоджених бітів у файлі: {ErrorCount} шт.\n";
+            msg += $"-----------------------------------------------------------------";
+            msg += $"\nP(a): {Pa}\n";
+            msg += $"_________________________________________________________________\n";
+            msg += $"-----------------------------------------------------------------";
+            msg += $"\nФМ-4\n";
+            msg += $"------\n";
+            msg += $"Ф: {KrumpRes[0]}\n";
+            msg += $"p: {pos[0]}\n";
+            msg += $"_________________________________________________________________\n";
+            msg += $"-----------------------------------------------------------------";
+            msg += $"\nВФМ-4\n";
+            msg += $"------\n";
+            msg += $"Ф: {KrumpRes[1]}\n";
+            msg += $"p: {pos[1]}\n";
+            msg += $"_________________________________________________________________\n";
+            msg += $"-----------------------------------------------------------------";
+            msg += $"\nКАМ-16\n";
+            msg += $"------\n";
+            msg += $"Ф: {KrumpRes[2]}\n";
+            msg += $"p: {pos[2]}\n";*/
+
+
+            msg += $"Загальна кількість байт: {ByteCount}\n";
+            msg += $"Загальна кількість біт: {BitCount}\n";
+            msg += $"Кількість пошкоджених бітів у файлі: {ErrorCount} шт.\n";
+            msg += $"-----------------------------------------------------------------";
+            msg += $"\nP(a): {Pa}\n";
+            msg += $"_________________________________________________________________\n";
+            msg += $"-----------------------------------------------------------------";
+            for (int i = 0; i < p.Length; i++)
+            {
+                msg += $"\nФМ-4\n";
+                msg += $"------\n";
+                msg += $"Ф: {KrumpRes[i]}\n";
+                msg += $"p: {pos[i]}\n";
+                msg += $"_________________________________________________________________\n";
+                msg += $"-----------------------------------------------------------------";
+            }
+            Console.WriteLine(msg);
+        }
+
+
+        public static string StringToBinary(string data)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (char c in data.ToCharArray())
+            {
+                sb.Append(Convert.ToString(c, 2).PadLeft(8, '0'));
+            }
+            return sb.ToString();
+        }
+    }
+    
+}

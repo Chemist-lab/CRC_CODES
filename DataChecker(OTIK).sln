@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataChecker(OTIK)", "DataChecker(OTIK)\DataChecker(OTIK).csproj", "{2AAC03A8-C78D-45A7-A9D1-A840EA3B2364}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AAC03A8-C78D-45A7-A9D1-A840EA3B2364}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AAC03A8-C78D-45A7-A9D1-A840EA3B2364}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AAC03A8-C78D-45A7-A9D1-A840EA3B2364}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AAC03A8-C78D-45A7-A9D1-A840EA3B2364}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A61224C3-461A-4B04-99EC-E9DB36AFAB08}
+	EndGlobalSection
+EndGlobal
